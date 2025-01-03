@@ -165,6 +165,141 @@ class UserController extends Controller
         return back()->withErrors(['email' => 'No user found with that email. Please check your credentials and try again.'])->withInput();
     }
 
+    public function properties(Request $request)
+    {
+        $query = Property::query();
 
+        if ($request->filled('location')) {
+            $query->where('thana', $request->location);
+        }
+
+        if ($request->filled('rent_range')) {
+            [$minRent, $maxRent] = explode('-', $request->rent_range);
+            $query->whereBetween('rent', [(int)$minRent, (int)$maxRent]);
+        }
+
+        if ($request->filled('sort')) {
+            switch ($request->sort) {
+                case 'rent_asc':
+                    $query->orderBy('rent', 'asc');
+                    break;
+                case 'rent_desc':
+                    $query->orderBy('rent', 'desc');
+                    break;
+                case 'type':
+                    $query->orderBy('type', 'asc');
+                    break;
+                    case 'availability':
+                        // Join with the tenant table to check for tenants
+                        $query->leftJoin('tenants', 'property.property_ID', '=', 'tenants.property_ID')
+                              ->select('property.*')
+                              ->orderByRaw("CASE WHEN tenants.property_ID IS NULL THEN 0 ELSE 1 END ASC")
+                              ->orderBy('available_from', 'asc');
+                        break;
+
+            }
+        }
+
+        $properties = $query->get();
+        return view('user.properties', compact('properties'));
+    }
+
+
+    public function showPropertyDetailsForPublic($id)
+    {
+        // Fetch the property by its ID or fail with a 404 error if not found
+        $property = Property::findOrFail($id);
+
+        // Check if the property has a tenant
+        $tenant = Tenant::where('property_ID', $id)->first();
+
+        // Default payment status
+        $paymentStatus = 'unpaid';
+        $tenantProfilePicture = null;
+
+        if ($tenant) {
+            // Fetch the latest payment for the tenant from tenant_payments table
+            $latestPayment = $tenant->tenantPayments()->latest()->first();
+
+            // Set payment status based on the latest payment
+            if ($latestPayment && $latestPayment->status == 'paid') {
+                $paymentStatus = 'paid';
+            }
+
+            // Get the tenant's profile picture if available
+            $tenantProfilePicture = $tenant->picture ?? null;
+        }
+
+        // Pass data to the view
+        return view('user.details', compact('property', 'paymentStatus', 'tenantProfilePicture', 'tenant'));
+    }
+
+
+    public function service(Request $request)
+    {
+        // Check if there is a search query
+        $query = $request->get('query', '');
+
+        // If there is a search query, filter services
+        if ($query) {
+            $services = Service::where('type', 'LIKE', '%' . $query . '%')
+                               ->orWhere('description', 'LIKE', '%' . $query . '%')
+                               ->get();
+        } else {
+            // If no search query, get all services
+            $services = Service::all();
+        }
+
+        // Get the service count
+        $serviceCount = $services->count();
+
+        // Pass the services and service count to the view
+        return view('user.service', compact('services', 'serviceCount'));
+    }
+
+    public function landlordHome()
+    {
+        // Get the authenticated landlord
+        $landlord = auth()->guard('landlord')->user();
+
+        // Get the profile picture
+        $profilePicture = $landlord->picture ?? null; // Assuming `picture` is a field in the landlord table
+
+        // Pass the picture to the view
+        return view('landlord.home', compact('profilePicture'));
+    }
+
+    public function tenantHome()
+    {
+        // Get the authenticated tenant
+        $tenant = auth()->guard('tenant')->user();
+
+        if (!$tenant) {
+            return redirect()->route('login')->with('error', 'Please log in first.'); // Adjust this according to your routing
+        }
+
+        // Get the profile picture
+        $profilePicture = $tenant->picture ?? null; // Assuming `picture` is a field in the tenant table
+
+        // Pass the picture to the view
+        return view('tenant.home', compact('profilePicture'));
+    }
+
+    public function visitorHome()
+    {
+        // Get the authenticated visitor using the 'visitor' guard
+        $visitor = Auth::guard('visitor')->user();
+
+        // Check if the visitor is authenticated
+        if (!$visitor) {
+            return redirect()->route('login')->with('error', 'Please log in first.'); // Adjust this according to your routing
+        }
+
+        // Get the profile picture path from the visitor object
+        $profilePicture = $visitor->picture ?? null; // Ensure this field exists in the users table
+
+        // Pass the profile picture to the view
+        return view('visitor.home', compact('profilePicture'));
+    }
 
 }
