@@ -100,7 +100,24 @@
               </div>
             </div>
           </div>
-
+          <div class="overlap-group">
+            <img class="arrow-left-circle" src="{{ asset('img/arrow-left-circle.svg') }}" alt="arrow-left-circle" />
+            <div class="flex-col-3 flex-col-4">
+              <p class="estate-ease_logo-3 estate-ease_logo-4">CURRENTLY VISIT REQUESTED PROPERTY LIST</p>
+              <div class="overlap-group3">
+                <div class="pro_card"></div>
+                <div class="visit_date"></div>
+                <div class="rented-date montserrat-normal-black-12px">RENTED DATE:</div>
+                <div class="property-address montserrat-normal-black-12px">PROPERTY ADDRESS:</div>
+                <div class="pro_pic"></div>
+                <div class="pro_add"></div>
+                <div class="pro_detail_btn"></div>
+                <div class="details">DETAILS</div>
+                <div class="status"></div>
+              </div>
+            </div>
+            <img class="arrow-right-circle" src="{{ asset('img/arrow-right-circle.svg') }}" alt="arrow-right-circle" />
+        </div>
         </div>
       </div>
     </div>

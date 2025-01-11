@@ -119,7 +119,7 @@
                 <div class="navbar-link-services montserrat-normal-black-16px">Services</div>
             </a>
 
-        <a href="">
+        <a href="{{ route('admin.login') }}">
             <div class="navbar-link-sign-up montserrat-normal-black-16px">ADMIN</div>
         </a>
 

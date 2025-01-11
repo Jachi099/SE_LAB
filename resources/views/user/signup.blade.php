@@ -29,7 +29,7 @@
             > <a href="{{ route('user.properties') }}">
               <div class="navbar-link-properties montserrat-normal-black-16px">Properties</div> </a
             > <a href="{{ route('user.service') }}"><div class="navbar-link-services montserrat-normal-black-16px">Services</div> </a
-            >  <a href=""><div class="navbar-link-sign-up montserrat-normal-black-16px">ADMIN</div> </a>
+            >  <a href="{{ route('admin.login') }}"><div class="navbar-link-sign-up montserrat-normal-black-16px">ADMIN</div> </a>
         </div>
         <div class="overlap-group">
           <img class="all-room-header-1" src="img/all-room-header-1-1.png" alt="All-Room-Header 1" />

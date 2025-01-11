@@ -98,6 +98,7 @@
 
 
             <div class="div_top"></div>
+            <div class="about montserrat-normal-black-16px">Notifications</div>
 
             <div class="estate-ease_logo montserrat-semi-bold-beaver-18px">EstateEase</div>
                   <a href="{{ route('visitor.user_home') }}"><div class="place montserrat-normal-black-16px">Home</div> </a
@@ -131,6 +132,16 @@
         {{ $property->rent }} tk
     </div>
                     <div class="navbar-link-payment-status">PAYMENT STATUS:</div>
+
+                    <div class="overlap-group16 {{ $paymentStatus == 'paid' ? 'paid-status' : 'unpaid-status' }}">
+    <div class="pro_detail_btn {{ $paymentStatus == 'paid' ? 'btn-paid' : 'btn-unpaid' }}"></div>
+    <div class="unpaid montserrat-normal-white-11px {{ $paymentStatus == 'paid' ? '' : 'unpaid-active' }}">
+        UNPAID
+    </div>
+    <div class="paid montserrat-normal-mongoose-11px {{ $paymentStatus == 'paid' ? 'paid-active' : '' }}">
+        PAID
+    </div>
+</div>
 
 
 
@@ -381,7 +392,7 @@
 
 
    <!-- The Form -->
-<form id="payment-form" action="" method="POST" onsubmit="submitPayment(event)">
+<form id="payment-form" action="{{ route('payment.process', ['visitor_id' => auth()->user()->id]) }}" method="POST" onsubmit="submitPayment(event)">
     @csrf
     <!-- Payment Method Selection -->
     <select class="name-14" name="payment_method" id="payment-method" required>
@@ -483,7 +494,126 @@
     </div>
 </div>
     </div>
+    <script>
+// Initialize Stripe
+var stripe = Stripe('pk_test_51QUU8KP2zO95Ub2TwNeybmjvtzavKiZPXeD2n7c5CdoWvwKDSdVtIf8W7C2sqoGdAHsk2PfkEwV1WOpiTjmsvAnr00VCJSHnh2');
+var elements = stripe.elements();
+var card = elements.create('card');
 
+// Handle Payment Method Selection
+document.getElementById('payment-method').addEventListener('change', function () {
+    var paymentMethod = this.value;
+    var cardInputContainer = document.getElementById('card-input-container');
+    var paymentDetails = document.getElementById('payment-method-details');
+    var paymentLabel = document.getElementById('payment-label');
+    var paymentInput = document.getElementById('payment-input');
+
+    if (paymentMethod === 'debit' || paymentMethod === 'credit') {
+        card.mount('#card-element');  // Mount Stripe card only once
+        cardInputContainer.style.display = 'block';
+        paymentDetails.style.display = 'none';
+    } else {
+        cardInputContainer.style.display = 'none';
+        paymentDetails.style.display = 'block';
+
+        if (paymentMethod === 'bkash') {
+            paymentLabel.textContent = 'bKash Number:';
+            paymentInput.setAttribute('placeholder', 'Enter bKash Number');
+        } else if (paymentMethod === 'nagad') {
+            paymentLabel.textContent = 'Nagad Number:';
+            paymentInput.setAttribute('placeholder', 'Enter Nagad Number');
+        }
+    }
+});
+// Show confirmation popup when 'Pay Now' is clicked
+document.getElementById('pay-btn').addEventListener('click', function() {
+    document.getElementById('confirmation-popup').style.display = 'flex';
+});
+
+// Close the confirmation popup when 'Cancel' is clicked
+document.getElementById('cancel-payment').addEventListener('click', function() {
+    document.getElementById('confirmation-popup').style.display = 'none';
+});
+
+// Proceed with payment when 'Confirm' is clicked
+document.getElementById('confirm-payment').addEventListener('click', function() {
+    document.getElementById('confirmation-popup').style.display = 'none';
+    submitPayment(event); // Call the submitPayment function
+});
+
+// Function to handle payment submission
+function submitPayment(event) {
+    event.preventDefault();
+
+    var paymentMethod = document.getElementById('payment-method').value;
+    var visitorId = document.querySelector('input[name="visitor_id"]').value;
+
+    if (paymentMethod === 'debit' || paymentMethod === 'credit') {
+        stripe.createToken(card).then(function(result) {
+            if (result.error) {
+                showPopup('Payment failed: ' + result.error.message);
+            } else {
+                processPayment(result.token.id);
+            }
+        });
+    } else {
+        // Submit form for bKash or Nagad
+        event.target.submit();
+    }
+}
+
+// Process Payment (AJAX)
+function processPayment(token) {
+    var formData = new FormData(document.getElementById('payment-form'));
+    formData.append('token', token);
+
+    fetch("{{ route('payment.process', ['visitor_id' => auth()->user()->id]) }}", {
+        method: "POST",
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showPopup('Payment successful!');
+        } else if (data.error) {
+            showPopup(data.error);  // Show error message (e.g., "You have already paid for this month.")
+        }
+    })
+    .catch(error => {
+        showPopup('Payment failed: ' + error.message);
+    });
+}
+
+// Show Popup Message
+function showPopup(message) {
+    alert(message);  // Replace with custom popup logic if needed
+}
+
+
+
+        document.getElementById('payment-method').addEventListener('change', function() {
+    var paymentMethod = this.value;
+    var label = document.getElementById('payment-label');
+    var input = document.getElementById('payment-input');
+
+    // Change the label and placeholder text based on the selected payment method
+    if (paymentMethod === 'bkash') {
+        label.textContent = 'bKash Number:';
+        input.setAttribute('placeholder', 'Enter bKash Number');
+    } else if (paymentMethod === 'nagad') {
+        label.textContent = 'Nagad Number:';
+        input.setAttribute('placeholder', 'Enter Nagad Number');
+    } else if (paymentMethod === 'debit' || paymentMethod === 'credit') {
+        label.textContent = 'CARD Number:';
+        input.setAttribute('placeholder', 'Enter Card Number');
+    }
+});
+
+
+
+
+
+</script>
 
   </body>
 </html>

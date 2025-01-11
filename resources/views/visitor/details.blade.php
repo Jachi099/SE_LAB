@@ -102,7 +102,19 @@
 
             <div class="navbar-link-payment-status">PAYMENT STATUS:</div>
 
+            <div class="overlap-group1012 {{ $paymentStatus == 'paid' ? 'paid-status' : 'unpaid-status' }}">
+    <div class="pro_detail_btn12 {{ $paymentStatus == 'paid' ? 'btn-paid' : 'btn-unpaid' }}"></div>
 
+    <!-- Display "UNPAID" only if the payment status is not "paid" -->
+    <div class="unpaid montserrat-normal-white-11px {{ $paymentStatus == 'unpaid' ? 'unpaid-active' : '' }}">
+        UNPAID
+    </div>
+
+    <!-- Display "PAID" only if the payment status is "paid" -->
+    <div class="paid montserrat-normal-mongoose-11px {{ $paymentStatus == 'paid' ? 'paid-active' : '' }}">
+        PAID
+    </div>
+</div>
 
 
 
